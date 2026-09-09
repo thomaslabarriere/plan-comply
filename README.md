@@ -34,17 +34,31 @@ With a key, an LLM applies each rule to the document and returns a structured ve
 
 ## What it produces
 
-A per-document **compliance report** — the shippable artifact — plus the operational framing a delivery team cares about (manual minutes saved, automated seconds, tokens). Here is the **offline baseline** on `doc-4` (an ERP whose narrative says it mentions *no* alarm):
+A per-document **compliance report** — the shippable artifact — plus the operational framing a delivery team cares about (manual minutes saved, automated seconds, tokens). Verbatim output of `plan-comply check --doc doc-4` on the **offline baseline** (an ERP whose narrative says it mentions *no* alarm):
 
 ```
+────────────────────────────────────────────────────────────────
 Rapport de conformité — Halle commerciale Saint-Roch [doc-4]
+────────────────────────────────────────────────────────────────
 Violations: 1 / 5 règles vérifiées
+
+OK ACC-CIRC-140 — Largeur de circulation
+      contrôle mesuré
 !! ACC-DOOR-090 — Passage utile de porte
+      contrôle mesuré
+OK ACC-RAMP-05 — Pente de rampe
+      contrôle mesuré
+OK FIRE-EVAC-ROUTE — Itinéraire d'évacuation
+      itinéraire d'évacuation détecté
 OK FIRE-ALARM-ERP — Alarme incendie en ERP
       alarme mentionnée
+
 Temps de résolution
   Manuel (estimé): 17 min
   Automatisé: 0.00 s
+────────────────────────────────────────────────────────────────
+
+Total: 1 violation(s) sur 1 document(s).
 ```
 
 Notice the baseline passes `FIRE-ALARM-ERP` — it "saw" the word *alarme* inside *"aucun ... d'alarme"*. A convincing demo would stop here. The point of this project is the next section: **catching that the automation is wrong.**
@@ -54,10 +68,14 @@ Notice the baseline passes `FIRE-ALARM-ERP` — it "saw" the word *alarme* insid
 The **reliability instrument** grades the automation against a labelled gold set and reports the number that matters for compliance — **violation recall** (a missed violation is the false negative that destroys client trust):
 
 ```
+────────────────────────────────────────────────────────────────
 Fiabilité de l'automatisation — heuristic
+────────────────────────────────────────────────────────────────
 Recall sur violations: 80% (4/5 détectées)
 Violations manquées (faux négatifs): 1
 Fausses alertes (faux positifs): 0
+Accord global: 96% (24/25)
+────────────────────────────────────────────────────────────────
 ```
 
 That 80% is real and instructive: the keyword baseline **cannot handle negation** — a document saying an ERP mentions *no* alarm still contains the word "alarme", so the baseline wrongly passes it. The instrument names that one miss. Swap in the LLM applier (`--applier llm`) and re-measure to see whether it closes the gap — which is exactly the question you'd ask before shipping either one.

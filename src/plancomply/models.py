@@ -64,7 +64,7 @@ class Rule(BaseModel):
     kind: RuleKind
     # Minutes a human expert spends applying this rule manually, per document.
     # Used only for the resolution-time framing in the report (illustrative).
-    manual_minutes: float = 3.0
+    manual_minutes: float
 
 
 class Verdict(BaseModel):
