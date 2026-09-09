@@ -30,7 +30,38 @@ plan-comply reliability --applier llm --model gpt-4o
 # OpenRouter: --applier llm --provider openrouter --model anthropic/claude-3.7-sonnet
 ```
 
-With a key, an LLM applies each rule to the document and returns a structured verdict; the reliability command then scores that automation against the same gold set.
+With a key, an LLM applies each rule to the document and returns a structured verdict; the reliability command then scores that automation against the same gold set, and prints per-document **inference cost** (illustrative $/doc) and **latency** alongside the recall.
+
+### Does the LLM beat the baseline? (`compare`)
+
+The question you actually ask before shipping — does the LLM automation close the false-negative gap the cheap baseline leaves open? — is one command:
+
+```bash
+plan-comply compare --model gpt-4o     # baseline vs LLM, side by side (needs a key)
+```
+
+```
+════════════════════════════════════════════════════════════════
+Comparaison de fiabilité (recall sur violations)
+────────────────────────────────────────────────────────────────
+  applier          recall   manquées   fausses alertes
+  heuristic          80%          1                0
+  llm:gpt-4o         ...%        ...              ...
+════════════════════════════════════════════════════════════════
+```
+
+The `heuristic` row is the measured offline baseline (80%, one miss). The `llm:gpt-4o` row is filled in when you run it with a key — how much it closes the gap depends on the model and the run, so no number is claimed here.
+
+### Ingest a real document (PDF / vision)
+
+The corpus is the trivial ingestor; two real ones sit behind the same interface (`src/plancomply/ingest.py`):
+
+```bash
+plan-comply check --pdf examples/plan-doc-1.pdf          # document parsing, offline
+plan-comply check --image plan-sheet.png --model gpt-4o  # vision model (needs a key)
+```
+
+`--pdf` extracts text (pypdf) and parses it; `--image` sends the sheet to a vision model that returns the structured elements + narrative. A production OCR/layout pipeline drops in here without touching the rules or the reliability instrument.
 
 ## What it produces
 
@@ -92,20 +123,29 @@ mypy
 pytest
 ```
 
+## From an expert interview to a running check
+
+The workflow this is built around — turning a compliance expert's words into an actionable brief, then an encoded rule with a ground-truth label — is written up in [`docs/from-expert-to-rule.md`](docs/from-expert-to-rule.md).
+
 ## Layout
 
 ```
 src/plancomply/
   models.py        # shared contracts (pydantic)
-  documents.py     # synthetic plan sheets + parser (OCR/vision plugs in here)
+  documents.py     # synthetic plan sheets + text parser
+  ingest.py        # real ingestion: PDF (pypdf) + vision model, one interface
   rules.py         # compliance rules + deterministic reference checks
   goldset.py       # ground-truth labels (objective for structured, hand for judgment)
   appliers.py      # LLM applier + offline baseline + test fixtures
   runner.py        # apply rules to documents, capture latency/usage
-  reliability.py   # violation recall / false negatives / false positives
-  report.py        # render the report + reliability artifacts
-  cli.py           # plan-comply check | reliability
-tests/             # mutation-proof + control + parser/gold-set guards
+  reliability.py   # violation recall / false negatives / false positives + compare
+  pricing.py       # illustrative token pricing for the $/doc line
+  report.py        # render the report, reliability, and comparison artifacts
+  cli.py           # plan-comply check | reliability | compare
+scripts/           # regenerate the sample PDF fixture
+examples/          # committed sample plan-sheet PDF
+docs/              # expert-interview -> rule write-up
+tests/             # mutation-proof + control + parser/gold-set/ingest guards
 ```
 
 ## License

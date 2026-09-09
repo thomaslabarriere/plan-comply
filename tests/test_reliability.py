@@ -11,7 +11,8 @@ from __future__ import annotations
 from plancomply.appliers import BlindApplier, GoldApplier, HeuristicApplier
 from plancomply.documents import get_document
 from plancomply.goldset import build_gold_set
-from plancomply.reliability import evaluate_reliability
+from plancomply.reliability import compare_reliability, evaluate_reliability
+from plancomply.report import render_reliability_comparison
 from plancomply.rules import RULES
 from plancomply.runner import run_document
 
@@ -40,6 +41,16 @@ def test_heuristic_baseline_gap_is_reported_exactly() -> None:
     assert rel.false_negatives == 1
     assert rel.false_positives == 0
     assert rel.violation_recall == 0.8  # 4 of 5 true violations caught
+
+
+def test_compare_ranks_appliers_by_recall() -> None:
+    gold = build_gold_set()
+    reports = compare_reliability([BlindApplier(), GoldApplier(gold)], gold)
+    assert [r.applier_name for r in reports] == ["blind", "gold"]
+    assert reports[0].violation_recall == 0.0
+    assert reports[1].violation_recall == 1.0
+    rendered = render_reliability_comparison(reports)
+    assert "blind" in rendered and "gold" in rendered
 
 
 def test_run_document_isolates_a_raising_applier() -> None:

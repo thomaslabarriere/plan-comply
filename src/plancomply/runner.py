@@ -39,7 +39,9 @@ def run_document(applier: Applier, doc: PlanDocument, rules: list[Rule]) -> Docu
                 completion_tokens=usage.completion_tokens if usage else 0,
             )
         )
-    return DocumentReport(doc_id=doc.doc_id, project=doc.project, results=results)
+    return DocumentReport(
+        doc_id=doc.doc_id, project=doc.project, applier=applier.name, results=results
+    )
 
 
 def run_corpus(

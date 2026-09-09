@@ -4,7 +4,8 @@ reliability report."""
 from __future__ import annotations
 
 from .models import DocumentReport, ReliabilityReport, Status
-from .rules import get_rule
+from .pricing import estimate_usd, model_from_applier
+from .rules import RULES, get_rule
 
 _MARK = {
     Status.COMPLIANT: "OK ",
@@ -44,9 +45,16 @@ def render_document_report(report: DocumentReport) -> str:
     lines.append(f"  Manuel (estimé): {manual_minutes:.0f} min")
     if auto_seconds > 0:
         lines.append(f"  Automatisé: {auto_seconds:.2f} s")
-    tokens = sum(r.prompt_tokens + r.completion_tokens for r in report.results)
+    tokens = report.prompt_tokens + report.completion_tokens
     if tokens > 0:
         lines.append(f"  Tokens: {tokens}")
+        usd = estimate_usd(
+            model_from_applier(report.applier),
+            report.prompt_tokens,
+            report.completion_tokens,
+        )
+        if usd is not None:
+            lines.append(f"  Coût estimé: ${usd:.4f} (prix catalogue indicatif)")
     lines.append(rule_bar)
     return "\n".join(lines)
 
@@ -66,5 +74,40 @@ def render_reliability_report(rel: ReliabilityReport) -> str:
     lines.append(
         f"Accord global: {rel.agreement_rate * 100:.0f}% ({rel.agree}/{rel.total})"
     )
+    tokens = rel.prompt_tokens + rel.completion_tokens
+    if tokens > 0:
+        usd = estimate_usd(
+            model_from_applier(rel.applier_name), rel.prompt_tokens, rel.completion_tokens
+        )
+        # Per-doc cost assumes the gold set is a full doc×rule cross-product
+        # (as build_gold_set produces); guard so a future sampled gold set
+        # degrades to a total-only figure rather than a misleading per-doc one.
+        docs = rel.total // len(RULES) if RULES and rel.total % len(RULES) == 0 else 0
+        cost_line = f"Coût: {tokens} tokens"
+        if usd is not None:
+            per_doc = f", ${usd / docs:.4f}/doc" if docs else ""
+            cost_line += f", ${usd:.4f} sur {rel.total} contrôles{per_doc}"
+        lines.append(cost_line)
+        lines.append(
+            f"Latence: {rel.total_latency_ms / rel.total:.0f} ms/contrôle "
+            f"({rel.total_latency_ms / 1000:.2f} s au total)"
+        )
+    lines.append(rule_bar)
+    return "\n".join(lines)
+
+
+def render_reliability_comparison(reports: list[ReliabilityReport]) -> str:
+    """Side-by-side recall of several appliers (baseline vs LLM)."""
+    rule_bar = "═" * 64
+    lines = [rule_bar, "Comparaison de fiabilité (recall sur violations)", "─" * 64]
+    name_width = max((len(r.applier_name) for r in reports), default=10)
+    header = f"  {'applier'.ljust(name_width)}   recall   manquées   fausses alertes"
+    lines.append(header)
+    for r in reports:
+        lines.append(
+            f"  {r.applier_name.ljust(name_width)}   "
+            f"{r.violation_recall * 100:>4.0f}%   "
+            f"{r.false_negatives:>8}   {r.false_positives:>14}"
+        )
     lines.append(rule_bar)
     return "\n".join(lines)

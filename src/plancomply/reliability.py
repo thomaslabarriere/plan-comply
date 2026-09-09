@@ -9,6 +9,8 @@ false negatives, and false positives.
 
 from __future__ import annotations
 
+import time
+
 from .appliers import Applier
 from .documents import get_document
 from .models import GoldItem, ReliabilityReport, Status
@@ -21,11 +23,18 @@ def evaluate_reliability(applier: Applier, gold: list[GoldItem]) -> ReliabilityR
     false_negatives = 0
     false_positives = 0
     true_violations = 0
+    prompt_tokens = 0
+    completion_tokens = 0
+    total_latency_ms = 0.0
 
     for item in gold:
         doc = get_document(item.doc_id)
         rule = get_rule(item.rule_id)
-        verdict, _ = applier.apply(doc, rule)
+        start = time.perf_counter()
+        verdict, usage = applier.apply(doc, rule)
+        total_latency_ms += (time.perf_counter() - start) * 1000
+        prompt_tokens += usage.prompt_tokens
+        completion_tokens += usage.completion_tokens
         got = verdict.status
         expected = item.expected
 
@@ -47,4 +56,18 @@ def evaluate_reliability(applier: Applier, gold: list[GoldItem]) -> ReliabilityR
         false_negatives=false_negatives,
         false_positives=false_positives,
         true_violations=true_violations,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_latency_ms=total_latency_ms,
     )
+
+
+def compare_reliability(
+    appliers: list[Applier], gold: list[GoldItem]
+) -> list[ReliabilityReport]:
+    """Grade several appliers against the same gold set (baseline vs LLM).
+
+    This answers the question a team actually asks before shipping: does the
+    LLM automation close the false-negative gap the cheap baseline leaves open?
+    """
+    return [evaluate_reliability(applier, gold) for applier in appliers]

@@ -91,11 +91,21 @@ class DocumentReport(BaseModel):
 
     doc_id: str
     project: str
+    # Name of the applier that produced this report (e.g. "llm:gpt-4o").
+    applier: str = ""
     results: list[RuleResult] = Field(default_factory=list)
 
     @property
     def violations(self) -> list[RuleResult]:
         return [r for r in self.results if r.verdict.status is Status.VIOLATION]
+
+    @property
+    def prompt_tokens(self) -> int:
+        return sum(r.prompt_tokens for r in self.results)
+
+    @property
+    def completion_tokens(self) -> int:
+        return sum(r.completion_tokens for r in self.results)
 
 
 class GoldItem(BaseModel):
@@ -123,6 +133,10 @@ class ReliabilityReport(BaseModel):
     false_positives: int
     # Denominator for recall: how many true violations were in the set.
     true_violations: int
+    # Operational totals across the whole gold set (0 for offline appliers).
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_latency_ms: float = 0.0
 
     @property
     def agreement_rate(self) -> float:

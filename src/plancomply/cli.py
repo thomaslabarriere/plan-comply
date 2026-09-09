@@ -1,31 +1,38 @@
 """plan-comply CLI.
 
-  plan-comply check         [--applier heuristic|llm] [--doc doc-1] [--json out.json]
-  plan-comply reliability   [--applier heuristic|llm]
+  plan-comply check        [--applier heuristic|llm] [--doc ID | --pdf F | --image F] [--json OUT]
+  plan-comply reliability  [--applier heuristic|llm]
+  plan-comply compare      [--model M]     # offline baseline vs LLM, side by side
 
-Offline by default (heuristic baseline). With --applier llm you need
-OPENAI_API_KEY (or OPENROUTER_API_KEY + --provider openrouter) -- that is the
-only thing required to run the real automation.
+Offline by default (heuristic baseline). The LLM applier, `--image` ingestion,
+and `compare` need OPENAI_API_KEY (or OPENROUTER_API_KEY + --provider
+openrouter) -- that is the only thing required to run the real automation.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from .appliers import Applier, HeuristicApplier, LLMApplier
 from .documents import get_document, load_corpus
 from .goldset import build_gold_set
 from .models import Status
-from .reliability import evaluate_reliability
-from .report import render_document_report, render_reliability_report
+from .reliability import compare_reliability, evaluate_reliability
+from .report import (
+    render_document_report,
+    render_reliability_comparison,
+    render_reliability_report,
+)
 from .rules import RULES
 from .runner import run_document
 
 
 def _build_applier(args: argparse.Namespace) -> Applier:
     if args.applier == "llm":
+        _require_key(args.provider)
         return LLMApplier(model=args.model, provider=args.provider)
     return HeuristicApplier()
 
@@ -34,6 +41,15 @@ def _add_applier_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--applier", choices=["heuristic", "llm"], default="heuristic")
     p.add_argument("--provider", choices=["openai", "openrouter"], default="openai")
     p.add_argument("--model", default="gpt-4o")
+
+
+def _require_key(provider: str) -> None:
+    var = "OPENROUTER_API_KEY" if provider == "openrouter" else "OPENAI_API_KEY"
+    if not os.environ.get(var):
+        raise SystemExit(
+            f"{var} is not set. The LLM applier needs it; set it and re-run "
+            "(or use the offline heuristic applier)."
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -45,17 +61,49 @@ def main(argv: list[str] | None = None) -> int:
 
     check = sub.add_parser("check", help="Run the automation on documents and print a report.")
     _add_applier_flags(check)
-    check.add_argument("--doc", help="A single doc_id (default: whole corpus).")
+    check.add_argument("--doc", help="A single doc_id from the built-in corpus.")
+    check.add_argument("--pdf", help="Ingest a plan-sheet PDF instead of the corpus.")
+    check.add_argument("--image", help="Ingest a plan-sheet image via a vision model (needs key).")
     check.add_argument("--json", help="Also write the report(s) as JSON to this path.")
 
     rel = sub.add_parser("reliability", help="Measure the automation against the gold set.")
     _add_applier_flags(rel)
 
+    cmp = sub.add_parser(
+        "compare",
+        help="Compare the offline baseline against the LLM automation (needs a key).",
+    )
+    cmp.add_argument("--provider", choices=["openai", "openrouter"], default="openai")
+    cmp.add_argument("--model", default="gpt-4o")
+
     args = parser.parse_args(argv)
+
+    if args.command == "compare":
+        _require_key(args.provider)
+        gold = build_gold_set()
+        comparison = compare_reliability(
+            [HeuristicApplier(), LLMApplier(model=args.model, provider=args.provider)],
+            gold,
+        )
+        print(render_reliability_comparison(comparison))
+        return 0
+
     applier = _build_applier(args)
 
     if args.command == "check":
-        docs = [get_document(args.doc)] if args.doc else load_corpus()
+        if args.pdf:
+            from .ingest import PdfIngestor
+
+            docs = [PdfIngestor().ingest(args.pdf)]
+        elif args.image:
+            from .ingest import VisionIngestor
+
+            _require_key(args.provider)
+            docs = [VisionIngestor(model=args.model, provider=args.provider).ingest(args.image)]
+        elif args.doc:
+            docs = [get_document(args.doc)]
+        else:
+            docs = load_corpus()
         reports = [run_document(applier, doc, RULES) for doc in docs]
         for report in reports:
             print(render_document_report(report))

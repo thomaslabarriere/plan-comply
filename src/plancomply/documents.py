@@ -73,7 +73,7 @@ def _parse_element(line: str) -> Element:
 # --- The synthetic corpus ----------------------------------------------------
 # Written as raw plan sheets so the parser is exercised end to end.
 
-_SHEETS: list[str] = [
+SAMPLE_SHEETS: list[str] = [
     # doc-1: compliant on structure, evacuation described, ERP with alarm.
     """
 # HEADER
@@ -151,7 +151,15 @@ conformes aux dimensions requises.
 
 def load_corpus() -> list[PlanDocument]:
     """Parse and return the synthetic plan-sheet corpus."""
-    return [parse_plan_sheet(sheet) for sheet in _SHEETS]
+    return [parse_plan_sheet(sheet) for sheet in SAMPLE_SHEETS]
+
+
+def sample_sheet(doc_id: str) -> str:
+    """The raw plan-sheet text for a given doc_id (used to build fixtures)."""
+    for sheet in SAMPLE_SHEETS:
+        if f"doc_id: {doc_id}" in sheet:
+            return sheet
+    raise KeyError(f"unknown document {doc_id!r}")
 
 
 def get_document(doc_id: str) -> PlanDocument:
