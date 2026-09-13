@@ -69,19 +69,19 @@ A per-document **compliance report**, the shippable artifact, plus the operation
 
 ```
 ────────────────────────────────────────────────────────────────
-Rapport de conformité, Halle commerciale Saint-Roch [doc-4]
+Rapport de conformité: Halle commerciale Saint-Roch [doc-4]
 ────────────────────────────────────────────────────────────────
 Violations: 1 / 5 règles vérifiées
 
-OK ACC-CIRC-140, Largeur de circulation
+OK ACC-CIRC-140: Largeur de circulation
       contrôle mesuré
-!! ACC-DOOR-090, Passage utile de porte
+!! ACC-DOOR-090: Passage utile de porte
       contrôle mesuré
-OK ACC-RAMP-05, Pente de rampe
+OK ACC-RAMP-05: Pente de rampe
       contrôle mesuré
-OK FIRE-EVAC-ROUTE, Itinéraire d'évacuation
+OK FIRE-EVAC-ROUTE: Itinéraire d'évacuation
       itinéraire d'évacuation détecté
-OK FIRE-ALARM-ERP, Alarme incendie en ERP
+OK FIRE-ALARM-ERP: Alarme incendie en ERP
       alarme mentionnée
 
 Temps de résolution
@@ -100,7 +100,7 @@ The **reliability instrument** grades the automation against a labelled gold set
 
 ```
 ────────────────────────────────────────────────────────────────
-Fiabilité de l'automatisation, heuristic
+Fiabilité de l'automatisation: heuristic
 ────────────────────────────────────────────────────────────────
 Recall sur violations: 80% (4/5 détectées)
 Violations manquées (faux négatifs): 1

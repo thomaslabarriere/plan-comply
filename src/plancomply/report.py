@@ -18,7 +18,7 @@ def render_document_report(report: DocumentReport) -> str:
     lines: list[str] = []
     rule_bar = "─" * 64
     lines.append(rule_bar)
-    lines.append(f"Rapport de conformité — {report.project} [{report.doc_id}]")
+    lines.append(f"Rapport de conformité: {report.project} [{report.doc_id}]")
     lines.append(rule_bar)
 
     violations = report.violations
@@ -30,7 +30,7 @@ def render_document_report(report: DocumentReport) -> str:
     for result in report.results:
         v = result.verdict
         rule = get_rule(v.rule_id)
-        lines.append(f"{_MARK[v.status]}{v.rule_id} — {rule.title}")
+        lines.append(f"{_MARK[v.status]}{v.rule_id}: {rule.title}")
         if v.evidence:
             lines.append(f"      preuve: {v.evidence}")
         if v.explanation:
@@ -63,7 +63,7 @@ def render_reliability_report(rel: ReliabilityReport) -> str:
     lines: list[str] = []
     rule_bar = "─" * 64
     lines.append(rule_bar)
-    lines.append(f"Fiabilité de l'automatisation — {rel.applier_name}")
+    lines.append(f"Fiabilité de l'automatisation: {rel.applier_name}")
     lines.append(rule_bar)
     lines.append(
         f"Recall sur violations: {rel.violation_recall * 100:.0f}% "
