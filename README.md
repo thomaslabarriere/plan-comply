@@ -1,10 +1,10 @@
 # plan-comply
 
-**End-to-end automation of construction compliance-rule checking — with a false-negative reliability instrument.**
+**End-to-end automation of construction compliance-rule checking, with a false-negative reliability instrument.**
 
-A compliance tool that ships into a real report is only trustworthy if you can say how often it **misses a real violation**. `plan-comply` takes a compliance rule the way an expert states it, applies it to a parsed plan document, and produces a shippable verdict (compliant / violation / not-applicable, with evidence). Then — the part most demos skip — it measures the automation against a labelled gold set and reports its **violation recall**: of the violations that truly exist, how many did it catch?
+A compliance tool that ships into a real report is only trustworthy if you can say how often it **misses a real violation**. `plan-comply` takes a compliance rule the way an expert states it, applies it to a parsed plan document, and produces a shippable verdict (compliant / violation / not-applicable, with evidence). Then, the part most demos skip, it measures the automation against a labelled gold set and reports its **violation recall**: of the violations that truly exist, how many did it catch?
 
-> **Scope.** Not a regulatory authority, not professional compliance advice. Documents are **synthetic**, rules are **simplified illustrations** loosely inspired by public accessibility/fire-safety concepts, and there is no client data. The value is the automation instrument — and the honesty of measuring its false negatives — not the regulatory content. Plug in the real rule base and your own documents for real numbers.
+> **Scope.** Not a regulatory authority, not professional compliance advice. Documents are **synthetic**, rules are **simplified illustrations** loosely inspired by public accessibility/fire-safety concepts, and there is no client data. The value is the automation instrument, and the honesty of measuring its false negatives, not the regulatory content. Plug in the real rule base and your own documents for real numbers.
 
 ## Quick start (no API key needed)
 
@@ -19,7 +19,7 @@ plan-comply check
 plan-comply reliability
 ```
 
-The offline **heuristic baseline** (measured field checks + narrative keyword rules) lets the whole pipeline — including the reliability instrument — run with no API key.
+The offline **heuristic baseline** (measured field checks + narrative keyword rules) lets the whole pipeline, including the reliability instrument, run with no API key.
 
 ## Run the real automation (LLM)
 
@@ -34,7 +34,7 @@ With a key, an LLM applies each rule to the document and returns a structured ve
 
 ### Does the LLM beat the baseline? (`compare`)
 
-The question you actually ask before shipping — does the LLM automation close the false-negative gap the cheap baseline leaves open? — is one command:
+The question you actually ask before shipping, does the LLM automation close the false-negative gap the cheap baseline leaves open?, is one command:
 
 ```bash
 plan-comply compare --model gpt-4o     # baseline vs LLM, side by side (needs a key)
@@ -50,7 +50,7 @@ Comparaison de fiabilité (recall sur violations)
 ════════════════════════════════════════════════════════════════
 ```
 
-The `heuristic` row is the measured offline baseline (80%, one miss). The `llm:gpt-4o` row is filled in when you run it with a key — how much it closes the gap depends on the model and the run, so no number is claimed here.
+The `heuristic` row is the measured offline baseline (80%, one miss). The `llm:gpt-4o` row is filled in when you run it with a key, how much it closes the gap depends on the model and the run, so no number is claimed here.
 
 ### Ingest a real document (PDF / vision)
 
@@ -65,23 +65,23 @@ plan-comply check --image plan-sheet.png --model gpt-4o  # vision model (needs a
 
 ## What it produces
 
-A per-document **compliance report** — the shippable artifact — plus the operational framing a delivery team cares about (manual minutes saved, automated seconds, tokens). Verbatim output of `plan-comply check --doc doc-4` on the **offline baseline** (an ERP whose narrative says it mentions *no* alarm):
+A per-document **compliance report**, the shippable artifact, plus the operational framing a delivery team cares about (manual minutes saved, automated seconds, tokens). Verbatim output of `plan-comply check --doc doc-4` on the **offline baseline** (an ERP whose narrative says it mentions *no* alarm):
 
 ```
 ────────────────────────────────────────────────────────────────
-Rapport de conformité — Halle commerciale Saint-Roch [doc-4]
+Rapport de conformité, Halle commerciale Saint-Roch [doc-4]
 ────────────────────────────────────────────────────────────────
 Violations: 1 / 5 règles vérifiées
 
-OK ACC-CIRC-140 — Largeur de circulation
+OK ACC-CIRC-140, Largeur de circulation
       contrôle mesuré
-!! ACC-DOOR-090 — Passage utile de porte
+!! ACC-DOOR-090, Passage utile de porte
       contrôle mesuré
-OK ACC-RAMP-05 — Pente de rampe
+OK ACC-RAMP-05, Pente de rampe
       contrôle mesuré
-OK FIRE-EVAC-ROUTE — Itinéraire d'évacuation
+OK FIRE-EVAC-ROUTE, Itinéraire d'évacuation
       itinéraire d'évacuation détecté
-OK FIRE-ALARM-ERP — Alarme incendie en ERP
+OK FIRE-ALARM-ERP, Alarme incendie en ERP
       alarme mentionnée
 
 Temps de résolution
@@ -92,15 +92,15 @@ Temps de résolution
 Total: 1 violation(s) sur 1 document(s).
 ```
 
-Notice the baseline passes `FIRE-ALARM-ERP` — it "saw" the word *alarme* inside *"aucun ... d'alarme"*. A convincing demo would stop here. The point of this project is the next section: **catching that the automation is wrong.**
+Notice the baseline passes `FIRE-ALARM-ERP`, it "saw" the word *alarme* inside *"aucun ... d'alarme"*. A convincing demo would stop here. The point of this project is the next section: **catching that the automation is wrong.**
 
 ## Why you can trust the automation (the differentiator)
 
-The **reliability instrument** grades the automation against a labelled gold set and reports the number that matters for compliance — **violation recall** (a missed violation is the false negative that destroys client trust):
+The **reliability instrument** grades the automation against a labelled gold set and reports the number that matters for compliance, **violation recall** (a missed violation is the false negative that destroys client trust):
 
 ```
 ────────────────────────────────────────────────────────────────
-Fiabilité de l'automatisation — heuristic
+Fiabilité de l'automatisation, heuristic
 ────────────────────────────────────────────────────────────────
 Recall sur violations: 80% (4/5 détectées)
 Violations manquées (faux négatifs): 1
@@ -109,7 +109,7 @@ Accord global: 96% (24/25)
 ────────────────────────────────────────────────────────────────
 ```
 
-That 80% is real and instructive: the keyword baseline **cannot handle negation** — a document saying an ERP mentions *no* alarm still contains the word "alarme", so the baseline wrongly passes it. The instrument names that one miss. Swap in the LLM applier (`--applier llm`) and re-measure to see whether it closes the gap — which is exactly the question you'd ask before shipping either one.
+That 80% is real and instructive: the keyword baseline **cannot handle negation**, a document saying an ERP mentions *no* alarm still contains the word "alarme", so the baseline wrongly passes it. The instrument names that one miss. Swap in the LLM applier (`--applier llm`) and re-measure to see whether it closes the gap, which is exactly the question you'd ask before shipping either one.
 
 `plan-comply reliability` exits non-zero when the automation missed any real violation, so it drops straight into CI.
 
@@ -125,7 +125,7 @@ pytest
 
 ## From an expert interview to a running check
 
-The workflow this is built around — turning a compliance expert's words into an actionable brief, then an encoded rule with a ground-truth label — is written up in [`docs/from-expert-to-rule.md`](docs/from-expert-to-rule.md).
+The workflow this is built around, turning a compliance expert's words into an actionable brief, then an encoded rule with a ground-truth label, is written up in [`docs/from-expert-to-rule.md`](docs/from-expert-to-rule.md).
 
 ## Layout
 
