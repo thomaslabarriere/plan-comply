@@ -37,8 +37,14 @@ def render_document_report(report: DocumentReport) -> str:
             lines.append(f"      {v.explanation}")
 
     # Resolution-time framing: what this run would have cost a human vs. the
-    # machine. Manual minutes cover only the rules that were actually checked.
-    manual_minutes = sum(get_rule(r.verdict.rule_id).manual_minutes for r in report.results)
+    # machine. Manual minutes cover only the rules that actually APPLIED -- a
+    # not-applicable rule (e.g. a fire rule on a non-ERP dwelling) costs the
+    # expert no resolution time, so counting it would overstate the ROI.
+    manual_minutes = sum(
+        get_rule(r.verdict.rule_id).manual_minutes
+        for r in report.results
+        if r.verdict.status is not Status.NOT_APPLICABLE
+    )
     auto_seconds = sum(r.latency_ms for r in report.results) / 1000
     lines.append("")
     lines.append("Temps de résolution")

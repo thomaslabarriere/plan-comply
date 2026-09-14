@@ -109,6 +109,8 @@ Accord global: 96% (24/25)
 ────────────────────────────────────────────────────────────────
 ```
 
+The gold set is **independent** ground truth: every label in `goldset.py` is hand-authored by reading each document, never computed from the same reference checks the applier runs. So this agreement is two independent opinions meeting, not the code grading itself, and the numbers mean what they claim.
+
 That 80% is real and instructive: the keyword baseline **cannot handle negation**, a document saying an ERP mentions *no* alarm still contains the word "alarme", so the baseline wrongly passes it. The instrument names that one miss. Swap in the LLM applier (`--applier llm`) and re-measure to see whether it closes the gap, which is exactly the question you'd ask before shipping either one.
 
 `plan-comply reliability` exits non-zero when the automation missed any real violation, so it drops straight into CI.
@@ -135,7 +137,7 @@ src/plancomply/
   documents.py     # synthetic plan sheets + text parser
   ingest.py        # real ingestion: PDF (pypdf) + vision model, one interface
   rules.py         # compliance rules + deterministic reference checks
-  goldset.py       # ground-truth labels (objective for structured, hand for judgment)
+  goldset.py       # independent hand-authored ground-truth labels (not derived from the applier)
   appliers.py      # LLM applier + offline baseline + test fixtures
   runner.py        # apply rules to documents, capture latency/usage
   reliability.py   # violation recall / false negatives / false positives + compare

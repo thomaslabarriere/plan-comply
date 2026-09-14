@@ -38,9 +38,15 @@ Rule(
     manual_minutes=2.0,           # the "~2 min" from the interview
 )
 
-# rules.py — the objective reference check (ground truth for the gold set)
+# rules.py — the objective reference check (the applier's structured path)
 "ACC-CIRC-140": lambda d: _check_min_attr(d, "corridor", "width_m", 1.40)
 ```
+
+The gold-set label for this rule is written out **independently by hand** in
+`goldset.py` (doc-2's 1,20 m corridor → `VIOLATION`, and so on). It is not
+generated from this reference check — if it were, the reported agreement would
+partly be the code grading itself. A regression test keeps the hand labels and
+the corpus in sync so a document edit that invalidates a label fails loudly.
 
 - **STRUCTURED vs JUDGMENT** comes straight from the interview: a measured field → structured (objectively checkable); "does the narrative describe an evacuation route" → judgment (needs the LLM). Being honest about which is which is the whole point — you don't dress up a lookup as AI, and you don't pretend a judgment call is objective.
 - The **not-applicable** answer is encoded explicitly, because silently passing a sheet that has no corridor is exactly the kind of hidden false negative this project exists to catch.

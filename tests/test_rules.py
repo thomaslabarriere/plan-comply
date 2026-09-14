@@ -47,3 +47,17 @@ def test_every_rule_is_covered_by_a_check_or_judgment() -> None:
     for rule in RULES:
         if rule.kind is RuleKind.STRUCTURED:
             assert rule.rule_id in REFERENCE_CHECKS
+
+
+def test_hand_labels_stay_defensible_against_the_corpus() -> None:
+    # The gold set is authored INDEPENDENTLY of the applier (no tautology). This
+    # guard is not the measurement: it re-derives the objective structured truth
+    # from the measured fields and asserts the HAND-WRITTEN gold labels still
+    # match the corpus, so an edit to a document that silently invalidates a
+    # label fails loudly instead of skewing the reported agreement.
+    gold = {(g.doc_id, g.rule_id): g.expected for g in build_gold_set()}
+    for doc in load_corpus():
+        for rule in RULES:
+            if rule.kind is RuleKind.STRUCTURED:
+                objective = REFERENCE_CHECKS[rule.rule_id](doc)
+                assert gold[(doc.doc_id, rule.rule_id)] is objective

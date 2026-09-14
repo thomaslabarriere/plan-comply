@@ -63,3 +63,31 @@ def test_run_document_isolates_a_raising_applier() -> None:
     report = run_document(Boom(), get_document("doc-1"), RULES)
     assert len(report.results) == len(RULES)
     assert all("erreur automation" in r.verdict.explanation for r in report.results)
+
+
+def test_reliability_isolates_a_raising_rule() -> None:
+    # A single raising rule must NOT crash the reliability run: the failure is
+    # caught and attributed. Here the applier raises ONLY on FIRE-ALARM-ERP.
+    from plancomply.appliers import Usage
+    from plancomply.models import Verdict
+
+    class RaisesOnAlarm:
+        name = "raises-on-alarm"
+
+        def apply(self, doc, rule):  # type: ignore[no-untyped-def]
+            if rule.rule_id == "FIRE-ALARM-ERP":
+                raise RuntimeError("boom on alarm")
+            # Otherwise behave like a perfect oracle so we can isolate the effect.
+            status = {
+                g.rule_id: g.expected for g in build_gold_set() if g.doc_id == doc.doc_id
+            }[rule.rule_id]
+            return Verdict(rule_id=rule.rule_id, status=status), Usage()
+
+    gold = build_gold_set()
+    rel = evaluate_reliability(RaisesOnAlarm(), gold)
+    # The run COMPLETED (not fatal) and graded all 25 controls.
+    assert rel.total == len(gold) == 25
+    # FIRE-ALARM-ERP has one true violation (doc-4); the raise is attributed as
+    # an undecided verdict, i.e. an honest missed violation, never "compliant".
+    assert rel.false_negatives == 1
+    assert rel.false_positives == 0

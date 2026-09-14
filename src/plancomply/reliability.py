@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import time
 
-from .appliers import Applier
+from .appliers import Applier, Usage
 from .documents import get_document
-from .models import GoldItem, ReliabilityReport, Status
+from .models import GoldItem, ReliabilityReport, Status, Verdict
 from .rules import get_rule
 
 
@@ -31,7 +31,19 @@ def evaluate_reliability(applier: Applier, gold: list[GoldItem]) -> ReliabilityR
         doc = get_document(item.doc_id)
         rule = get_rule(item.rule_id)
         start = time.perf_counter()
-        verdict, usage = applier.apply(doc, rule)
+        try:
+            verdict, usage = applier.apply(doc, rule)
+        except Exception as exc:  # noqa: BLE001 - isolate + attribute per-rule failures
+            # A single raising rule must NOT sink the whole reliability run. The
+            # failure is isolated into an undecided verdict (never "compliant"),
+            # so wherever a real violation existed it is counted as an honest
+            # false negative below rather than crashing the measurement.
+            verdict = Verdict(
+                rule_id=rule.rule_id,
+                status=Status.NOT_APPLICABLE,
+                explanation=f"[erreur automation] {exc}",
+            )
+            usage = Usage()
         total_latency_ms += (time.perf_counter() - start) * 1000
         prompt_tokens += usage.prompt_tokens
         completion_tokens += usage.completion_tokens
