@@ -1,6 +1,6 @@
 # From an expert interview to a running check
 
-Freeda's JD: *"You come out of an expert interview with a technically actionable brief, not a vague wishlist."* This is how one rule in this repo actually got there — the workflow the automation is built around, not an afterthought.
+The brief we work from: *"You come out of an expert interview with a technically actionable brief, not a vague wishlist."* This is how one rule in this repo actually got there — the workflow the automation is built around, not an afterthought.
 
 ## 1. What the expert says (raw)
 
@@ -53,4 +53,4 @@ the corpus in sync so a document edit that invalidates a label fails loudly.
 
 ## 4. Then: prove it, don't trust it
 
-Every encoded rule gets a ground-truth label in `goldset.py` and is run through the reliability instrument. The brief above is only "done" (Freeda's word) when the automation's **violation recall** on that rule is measured — not when the code merely runs.
+Every encoded rule gets a ground-truth label in `goldset.py` and is run through the reliability instrument. The brief above is only "done" (the brief's word) when the automation's **violation recall** on that rule is measured — not when the code merely runs.

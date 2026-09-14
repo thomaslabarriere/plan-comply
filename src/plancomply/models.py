@@ -119,7 +119,7 @@ class GoldItem(BaseModel):
 class ReliabilityReport(BaseModel):
     """How well the automation matches ground truth on the labelled set.
 
-    The headline number for Freeda's world is RECALL ON VIOLATIONS: of the
+    The headline number for a compliance team is RECALL ON VIOLATIONS: of the
     violations that truly exist, how many did the automation catch? A missed
     violation (false negative) is the failure that destroys client trust.
     """
