@@ -118,7 +118,9 @@ measurement) in two minutes, deterministically, no credits; the baseline's
 honest 80% is the foil that shows what the LLM has to beat.
 
 **Doesn't prove.** The baseline is deliberately weak; the meaningful number is the
-LLM applier's recall on a real rule base (see the committed gpt-4o run).
+LLM applier's recall on a real rule base, which is not measured here (no LLM run
+is committed). The `compare` command wires the LLM applier in behind a key so that
+number can be produced against real data.
 
 ---
 
