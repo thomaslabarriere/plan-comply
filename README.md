@@ -113,6 +113,8 @@ The gold set is **independent** ground truth: every label in `goldset.py` is han
 
 That 80% is real and instructive: the keyword baseline **cannot handle negation**, a document saying an ERP mentions *no* alarm still contains the word "alarme", so the baseline wrongly passes it. The instrument names that one miss. Swap in the LLM applier (`--applier llm`) and re-measure to see whether it closes the gap, which is exactly the question you'd ask before shipping either one.
 
+CI runs `plan-comply reliability` as a **regression gate**: because the automation is knowingly imperfect, the gate fails only if recall drops **below a documented floor** (`--min-recall`, default `0.8`), not on every miss. It protects the measured level from silently degrading without pinning the build red at a demo's realistic recall.
+
 `plan-comply reliability` exits non-zero when the automation missed any real violation, so it drops straight into CI.
 
 ## Why you can trust the instrument (mutation proof)

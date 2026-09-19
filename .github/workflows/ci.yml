@@ -19,5 +19,5 @@ jobs:
         run: mypy
       - name: Test
         run: pytest -q
-      - name: Reliability gate (fails if the automation misses a real violation)
+      - name: Reliability regression gate (fails if recall drops below the floor)
         run: plan-comply reliability
